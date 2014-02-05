@@ -16,17 +16,18 @@ package commands
 
 import (
     "fmt"
+    "github.com/codegangsta/martini"
+    "github.com/spf13/cobra"
+    "labix.org/v2/mgo"
     "net/http"
     "os"
     "strconv"
     "strings"
-    "github.com/spf13/cobra"
-    "github.com/codegangsta/martini"
-    "labix.org/v2/mgo"
 )
 
 var Verbose bool
 var Port int
+var DBName string
 var db *mgo.Database
 
 func Execute() {
@@ -63,9 +64,9 @@ func InitializeFixtures(cmd *cobra.Command, args []string) {
 
 func RootRun(cmd *cobra.Command, args []string) {
     m := martini.New()
-	r := martini.NewRouter()
- 
-	m.Map(db)
+    r := martini.NewRouter()
+
+    m.Map(db)
 
     r.Get("/", index)
     r.Get("/comments/:forum/:post", comments)
@@ -76,13 +77,20 @@ func RootRun(cmd *cobra.Command, args []string) {
     http.ListenAndServe(":"+strconv.Itoa(Port), m)
 }
 
+func db_init() {
+    session, err := mgo.Dial("localhost:27017")
+    if err != nil {
+        panic(err)
+    }
+    db = session.DB(DBName)
+    defer session.Close()
+}
+
 func init() {
     Root.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
     Root.Flags().IntVarP(&Port, "port", "p", 2714, "port number to run on")
-    session, err := mgo.Dial("localhost:27017")
-    if err != nil { panic(err) }
-    db = session.DB("pandora")
-    defer session.Close()
+    Root.Flags().StringVarP(&DBName, "dbname", "d", "pandora", "name of the database")
+    db_init()
 }
 
 func index() string {
@@ -90,7 +98,7 @@ func index() string {
 }
 
 func comments(session mgo.Session, parms martini.Params) (int, string) {
-	forum := parms["forum"]
-	post := parms["post"]
-    return http.StatusOK, strings.Join([]string {"ah, yeah: ", forum, post} , " ")
+    forum := parms["forum"]
+    post := parms["post"]
+    return http.StatusOK, strings.Join([]string{"ah, yeah: ", forum, post}, " ")
 }
