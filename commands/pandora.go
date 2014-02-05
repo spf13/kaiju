@@ -18,15 +18,16 @@ import (
     "fmt"
     "github.com/spf13/cobra"
     "os"
+    "net/http"
+    "strconv"
+    "github.com/codegangsta/martini"
 )
 
 var Root = &cobra.Command{
     Use:   "pandora",
     Short: "Pandora is an open source comment server",
     Long:  `Pandora is an open source comment server`,
-    Run: func(cmd *cobra.Command, args []string) {
-        fmt.Println("Hello World")
-    },
+    Run: RootRun, 
 }
 
 func Execute() {
@@ -35,6 +36,19 @@ func Execute() {
         fmt.Println(err)
         os.Exit(-1)
     }
+
+}
+
+func RootRun(cmd *cobra.Command, args []string) {
+    m := martini.New()
+	r := martini.NewRouter()
+
+    r.Get("/", index)
+    r.Get("/comments/:url", comments)
+
+	m.Action(r.Handle)
+
+    http.ListenAndServe(":" + strconv.Itoa(Port), m)
 }
 
 var Verbose bool
@@ -43,4 +57,17 @@ var Port int
 func init() {
     Root.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
     Root.Flags().IntVarP(&Port, "port", "p", 2714, "port number to run on")
+}
+
+func index() string {
+    return "What up?"
+}
+
+func comments(parms martini.Params) (int, string) {
+	url := parms["url"]
+//	if err != nil || url == nil {
+//		// Invalid id, or does not exist
+//		return http.StatusNotFound, "what?"
+//    }
+	return http.StatusOK, "ah, yeah: " + url
 }
