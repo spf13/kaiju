@@ -16,8 +16,6 @@ package commands
 
 import (
     "fmt"
-    "github.com/codegangsta/martini"
-    "github.com/spf13/cobra"
     "net/http"
     "os"
     "strconv"
@@ -29,11 +27,7 @@ import (
 
 var Verbose bool
 var Port int
-
-func init() {
-    Root.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
-    Root.Flags().IntVarP(&Port, "port", "p", 2714, "port number to run on")
-}
+var db *mgo.Database
 
 func Execute() {
     AddCommands()
@@ -81,9 +75,6 @@ func RootRun(cmd *cobra.Command, args []string) {
     fmt.Println("Running on port " + strconv.Itoa(Port))
     http.ListenAndServe(":"+strconv.Itoa(Port), m)
 }
-var Verbose bool
-var Port int
-var db *mgo.Database
 
 func init() {
     Root.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
