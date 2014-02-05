@@ -20,6 +20,7 @@ import (
     "os"
     "net/http"
     "strconv"
+    "strings"
     "github.com/codegangsta/martini"
 )
 
@@ -44,7 +45,7 @@ func RootRun(cmd *cobra.Command, args []string) {
 	r := martini.NewRouter()
 
     r.Get("/", index)
-    r.Get("/comments/:url", comments)
+    r.Get("/comments/:forum/:post", comments)
 
 	m.Action(r.Handle)
 
@@ -64,10 +65,7 @@ func index() string {
 }
 
 func comments(parms martini.Params) (int, string) {
-	url := parms["url"]
-//	if err != nil || url == nil {
-//		// Invalid id, or does not exist
-//		return http.StatusNotFound, "what?"
-//    }
-	return http.StatusOK, "ah, yeah: " + url
+	forum := parms["forum"]
+	post := parms["post"]
+    return http.StatusOK, strings.Join([]string {"ah, yeah: ", forum, post} , " ")
 }
