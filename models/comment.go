@@ -5,16 +5,16 @@ import (
 )
 
 type CommentUser struct {
-    FullName string
-    UserId bson.ObjectId
+    FullName string `bson:",omitempty"`
+    UserId bson.ObjectId `bson:",omitempty"`
 }
 
 type Comment struct {
-    Id bson.ObjectId "_id"
-    Page string
-    User CommentUser
-    Body string
-    Parent bson.ObjectId
-    Children []bson.ObjectId
-    Forum bson.ObjectId
+    Id bson.ObjectId `bson:"_id"`
+    Page string `bson:",omitempty"`
+    User CommentUser `bson:",omitempty"`
+    Body string `bson:",omitempty"`
+    Parent bson.ObjectId `bson:",omitempty"`
+    Children []bson.ObjectId `bson:",omitempty"`
+    Forum bson.ObjectId `bson:",omitempty"`
 }

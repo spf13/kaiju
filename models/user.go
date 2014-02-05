@@ -10,11 +10,11 @@ type UserService struct {
 }
 
 type User struct {
-    Id bson.ObjectId "_id"
-    FullName string
-    Website string
-    Location string
-    Bio string
-    Services []UserService
-    Forum bson.ObjectId
+    Id bson.ObjectId `bson:"_id"`
+    FullName string `bson:",omitempty"`
+    Website string `bson:",omitempty"`
+    Location string `bson:",omitempty"`
+    Bio string `bson:",omitempty"`
+    Services []UserService `bson:",omitempty"`
+    Forum bson.ObjectId `bson:",omitempty"`
 }
