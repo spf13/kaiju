@@ -18,7 +18,9 @@ import (
     "fmt"
     "github.com/codegangsta/martini"
     "github.com/spf13/cobra"
+    "github.com/spf13/pandora/models"
     "labix.org/v2/mgo"
+    "labix.org/v2/mgo/bson"
     "net/http"
     "os"
     "strconv"
@@ -91,6 +93,45 @@ func init() {
     Root.Flags().IntVarP(&Port, "port", "p", 2714, "port number to run on")
     Root.Flags().StringVarP(&DBName, "dbname", "d", "pandora", "name of the database")
     db_init()
+}
+
+var InitializeFixturesCmd = &cobra.Command{
+    Use:   "initializeFixtures",
+    Short: "Initialize Fixtures, throw away",
+    Long:  ``,
+    Run:   InitializeFixtures,
+}
+
+func InitializeFixtures(cmd *cobra.Command, args []string) {
+    session, err := mgo.Dial("localhost")
+    if err != nil {
+        panic(err)
+    }
+    defer session.Close()
+
+    c := session.DB("test").C("users")
+
+    u1 := &models.User{
+        Id:       bson.NewObjectId(),
+        FullName: "foo",
+    }
+
+    err = c.Insert(u1)
+
+    if err != nil {
+        panic(err)
+    }
+
+    result := models.User{}
+    err = c.Find(bson.M{"fullname": "foo"}).One(&result)
+
+    if err != nil {
+        panic(err)
+    }
+
+    fmt.Println("Phone:", result.FullName)
+
+    fmt.Println("Fixtures Initialized")
 }
 
 func index() string {
