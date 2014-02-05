@@ -16,41 +16,13 @@ package commands
 
 import (
     "fmt"
+    "github.com/codegangsta/martini"
     "github.com/spf13/cobra"
-    "os"
     "net/http"
+    "os"
     "strconv"
     "strings"
-    "github.com/codegangsta/martini"
 )
-
-var Root = &cobra.Command{
-    Use:   "pandora",
-    Short: "Pandora is an open source comment server",
-    Long:  `Pandora is an open source comment server`,
-    Run: RootRun, 
-}
-
-func Execute() {
-    err := Root.Execute()
-    if err != nil {
-        fmt.Println(err)
-        os.Exit(-1)
-    }
-
-}
-
-func RootRun(cmd *cobra.Command, args []string) {
-    m := martini.New()
-	r := martini.NewRouter()
-
-    r.Get("/", index)
-    r.Get("/comments/:forum/:post", comments)
-
-	m.Action(r.Handle)
-
-    http.ListenAndServe(":" + strconv.Itoa(Port), m)
-}
 
 var Verbose bool
 var Port int
@@ -60,12 +32,56 @@ func init() {
     Root.Flags().IntVarP(&Port, "port", "p", 2714, "port number to run on")
 }
 
+func Execute() {
+    AddCommands()
+    err := Root.Execute()
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(-1)
+    }
+
+}
+
+func AddCommands() {
+    Root.AddCommand(InitializeFixturesCmd)
+}
+
+var Root = &cobra.Command{
+    Use:   "pandora",
+    Short: "Pandora is an open source comment server",
+    Long:  `Pandora is an open source comment server`,
+    Run:   RootRun,
+}
+
+func RootRun(cmd *cobra.Command, args []string) {
+    m := martini.New()
+    r := martini.NewRouter()
+
+    r.Get("/", index)
+    r.Get("/comments/:forum/:post", comments)
+
+    m.Action(r.Handle)
+
+    http.ListenAndServe(":"+strconv.Itoa(Port), m)
+}
+
+var InitializeFixturesCmd = &cobra.Command{
+    Use:   "initializeFixtures",
+    Short: "Initialize Fixtures, throw away",
+    Long:  ``,
+    Run:   InitializeFixtures,
+}
+
+func InitializeFixtures(cmd *cobra.Command, args []string) {
+    fmt.Println("Fixtures Initialized")
+}
+
 func index() string {
     return "What up?"
 }
 
 func comments(parms martini.Params) (int, string) {
-	forum := parms["forum"]
-	post := parms["post"]
-    return http.StatusOK, strings.Join([]string {"ah, yeah: ", forum, post} , " ")
+    forum := parms["forum"]
+    post := parms["post"]
+    return http.StatusOK, strings.Join([]string{"ah, yeah: ", forum, post}, " ")
 }
