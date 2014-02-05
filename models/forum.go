@@ -1,8 +1,8 @@
 package models
 
-import {
+import (
     "labix.org/v2/mgo/bson"
-}
+)
 
 type Forum struct {
     Id bson.ObjectId "_id"
