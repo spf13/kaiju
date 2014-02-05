@@ -16,4 +16,5 @@ type Comment struct {
     Body string
     Parent bson.ObjectId
     Children []bson.ObjectId
+    Forum bson.ObjectId
 }

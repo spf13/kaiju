@@ -16,4 +16,5 @@ type User struct {
     Location string
     Bio string
     Services []UserService
+    Forum bson.ObjectId
 }
