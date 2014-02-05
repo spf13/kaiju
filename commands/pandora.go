@@ -127,8 +127,8 @@ func index() string {
     return "What up?"
 }
 
-func comments(session mgo.Session, parms martini.Params) (int, string) {
-    forum := parms["forum"]
-    post := parms["post"]
-    return http.StatusOK, strings.Join([]string{"ah, yeah: ", forum, post}, " ")
+func comments(database *mgo.Database, parms martini.Params) (int, string) {
+	forum := parms["forum"]
+	post := parms["post"]
+    return http.StatusOK, strings.Join([]string {"ah, yeah: ", forum, post} , " ")
 }
