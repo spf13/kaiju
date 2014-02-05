@@ -53,17 +53,6 @@ var Root = &cobra.Command{
     Run:   RootRun,
 }
 
-var InitializeFixturesCmd = &cobra.Command{
-    Use:   "initializeFixtures",
-    Short: "Initialize Fixtures, throw away",
-    Long:  ``,
-    Run:   InitializeFixtures,
-}
-
-func InitializeFixtures(cmd *cobra.Command, args []string) {
-    fmt.Println("Fixtures Initialized")
-}
-
 func RootRun(cmd *cobra.Command, args []string) {
     m := martini.New()
     r := martini.NewRouter()
