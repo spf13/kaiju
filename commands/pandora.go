@@ -22,6 +22,9 @@ import (
     "os"
     "strconv"
     "strings"
+    "github.com/spf13/cobra"
+    "github.com/codegangsta/martini"
+    "labix.org/v2/mgo"
 )
 
 var Verbose bool
@@ -53,18 +56,6 @@ var Root = &cobra.Command{
     Run:   RootRun,
 }
 
-func RootRun(cmd *cobra.Command, args []string) {
-    m := martini.New()
-    r := martini.NewRouter()
-
-    r.Get("/", index)
-    r.Get("/comments/:forum/:post", comments)
-
-    m.Action(r.Handle)
-
-    http.ListenAndServe(":"+strconv.Itoa(Port), m)
-}
-
 var InitializeFixturesCmd = &cobra.Command{
     Use:   "initializeFixtures",
     Short: "Initialize Fixtures, throw away",
@@ -76,12 +67,39 @@ func InitializeFixtures(cmd *cobra.Command, args []string) {
     fmt.Println("Fixtures Initialized")
 }
 
+func RootRun(cmd *cobra.Command, args []string) {
+    m := martini.New()
+	r := martini.NewRouter()
+ 
+	m.Map(db)
+
+    r.Get("/", index)
+    r.Get("/comments/:forum/:post", comments)
+
+    m.Action(r.Handle)
+
+    fmt.Println("Running on port " + strconv.Itoa(Port))
+    http.ListenAndServe(":"+strconv.Itoa(Port), m)
+}
+var Verbose bool
+var Port int
+var db *mgo.Database
+
+func init() {
+    Root.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
+    Root.Flags().IntVarP(&Port, "port", "p", 2714, "port number to run on")
+    session, err := mgo.Dial("localhost:27017")
+    if err != nil { panic(err) }
+    db = session.DB("pandora")
+    defer session.Close()
+}
+
 func index() string {
     return "What up?"
 }
 
-func comments(parms martini.Params) (int, string) {
-    forum := parms["forum"]
-    post := parms["post"]
-    return http.StatusOK, strings.Join([]string{"ah, yeah: ", forum, post}, " ")
+func comments(session mgo.Session, parms martini.Params) (int, string) {
+	forum := parms["forum"]
+	post := parms["post"]
+    return http.StatusOK, strings.Join([]string {"ah, yeah: ", forum, post} , " ")
 }
