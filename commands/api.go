@@ -20,7 +20,7 @@ func index() template.HTML {
 <form action="/comment" method="POST">
   <input type="hidden" name="userId" value="5346e476331583002c7de60d" />
   <input type="hidden" name="forum" value="5346e494331583002c7de60e" />
-  <input type="hidden" name="parent" value="5346f7a8080fcc885c000001" />
+  <input type="hidden" name="parent" value="534718de080fcc8979000002" />
   <input type="hidden" name="page" value="dans sc2 blog post" />
   <input type="hidden" name="body" value="sc2 is awesome. Toss OP" />
   <input type="hidden" name="timestamp" value="123456789" />
@@ -98,6 +98,7 @@ func PostComment(db *mgo.Database, userId bson.ObjectId, forumId bson.ObjectId,
 	page string, body string, parentId *bson.ObjectId) (*models.Comment, error) {
 
 	users := db.C("users")
+	forums := db.C("forums")
 	comments := db.C("comments")
 
 	user := &models.User{}
@@ -108,6 +109,15 @@ func PostComment(db *mgo.Database, userId bson.ObjectId, forumId bson.ObjectId,
 		return nil, fmt.Errorf("User not found. Id: `%v`", userId)
 	default:
 		return nil, fmt.Errorf("Error finding user. Err: %v", err)
+	}
+
+	err = forums.Find(bson.M{"_id": forumId}).One(make(bson.M))
+	switch err {
+	case nil:
+	case mgo.ErrNotFound:
+		return nil, fmt.Errorf("Forum not found. Id: `%v`", forumId)
+	default:
+		return nil, fmt.Errorf("Error finding forum. Err: %v", err)
 	}
 
 	ancestors := make([]bson.ObjectId, 0, 0)
