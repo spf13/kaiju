@@ -91,7 +91,7 @@ func init() {
 	Root.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
 	Root.Flags().IntVarP(&Port, "port", "p", 2714, "port number to run on")
 	Root.Flags().StringVarP(&DBName, "dbname", "d", "kaiju", "name of the database")
-	Root.Flags().StringVarP(&Host, "host", "h", "localhost", "host to run on")
+	Root.Flags().StringVarP(&Host, "host", "h", "", "host to run on")
 	Root.Flags().IntVar(&DBPort, "dbport", 27017, "port to access mongoDB")
 	Root.Flags().StringVar(&DBHost, "dbhost", "localhost", "host where mongoDB is")
 
