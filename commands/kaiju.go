@@ -16,6 +16,7 @@ package commands
 
 import (
 	"fmt"
+	"html/template"
 	"net/http"
 	"os"
 	"strconv"
@@ -66,6 +67,7 @@ func RootRun(cmd *cobra.Command, args []string) {
 
 	r.Get("/", index)
 	r.Get("/comments/:forum/:post", comments)
+	r.Put("/comment", PostCommentResource)
 
 	m.Action(r.Handle)
 
@@ -83,7 +85,6 @@ func db_init() {
 }
 
 func init() {
-
 	Root.PersistentFlags().StringVar(&CfgFile, "config", "", "config file (default is path/config.yaml|json|toml)")
 	Root.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
 	Root.Flags().IntVarP(&Port, "port", "p", 2714, "port number to run on")
@@ -92,7 +93,7 @@ func init() {
 	Root.Flags().StringVar(&DBHost, "dbhost", "localhost", "host where mongoDB is")
 
 	viper.SetConfigName(CfgFile)
-	viper.AddConfigPath("/etc/kaiju/")
+	viper.AddConfigPath("./")
 	viper.ReadInConfig()
 
 	viper.Set("port", Port)
@@ -143,12 +144,104 @@ func InitializeFixtures(cmd *cobra.Command, args []string) {
 	fmt.Println("Fixtures Initialized")
 }
 
-func index() string {
-	return "What up?"
+func index() template.HTML {
+	return	template.HTML(`
+<html>
+<body>
+<form action="/comment" method="PUT">
+  <input type="hidden" name="forum" value="dans website" />
+  <input type="hidden" name="page" value="starcraft is awesome.html" />
+  <input type="hidden" name="email" value="danny.gottlieb@gmail.com" />
+  <input type="hidden" name="timestamp" value="123456789" />
+  <input type="hidden" name="body" value="I think starcraft is cool, but toss OP." />
+  <input type="submit" />
+</form>
+</body>
+</html>
+`)
 }
 
 func comments(database *mgo.Database, parms martini.Params) (int, string) {
 	forum := parms["forum"]
 	post := parms["post"]
 	return http.StatusOK, strings.Join([]string{"ah, yeah: ", forum, post}, " ")
+}
+
+func PostCommentResource(request *http.Request, db mgo.Database) string {
+	if err := request.ParseForm(); err != nil {
+		return err.Error()
+	}
+
+	userIdStr := request.FormValue("userId")
+	if bson.IsObjectIdHex(userIdStr) == false {
+		return fmt.Sprintf("`userId` is not valid. Received: `%v`", userIdStr)
+	}
+	userId := bson.ObjectIdHex(userIdStr);
+
+	forumIdStr := request.FormValue("forum")
+	if bson.IsObjectIdHex(forumIdStr) == false {
+		return fmt.Sprintf("`forum` is not valid. Received: `%v`", forumIdStr)
+	}
+	forumId := bson.ObjectIdHex(forumIdStr)
+
+	parentIdStr := request.FormValue("parent")
+	var parent *bson.ObjectId
+	switch {
+	case parentIdStr == "":
+	case bson.IsObjectIdHex(parentIdStr):
+		parentIdObj := bson.ObjectIdHex(parentIdStr)
+		parent = &parentIdObj
+	default:
+		return fmt.Sprintf("`parent` is not valid. Received: `%v`", parentIdStr)
+	}
+
+	comment, err := PostComment(db,
+		userId,
+		forumId,
+		request.FormValue("page"),
+		request.FormValue("body"),
+		parent)
+
+	if err != nil {
+		return err.Error()
+	}
+
+	return fmt.Sprintf("Accepted. Comment ID: %v", comment.Id)
+}
+
+func PostComment(db mgo.Database, userId bson.ObjectId, forumId bson.ObjectId,
+	page string, body string, parentId *bson.ObjectId) (*models.Comment, error) {
+
+	users := db.C("users")
+	comments := db.C("comments")
+
+	user := &models.User{}
+	err := users.Find(bson.M{"_id": userId}).One(user)
+	switch err {
+	case nil:
+	case mgo.ErrNotFound:
+		return nil, fmt.Errorf("User not found.")
+	default:
+		return nil, fmt.Errorf("Error finding user. Err: %v", err)
+	}
+
+	commentId := bson.NewObjectId()
+	comment := &models.Comment{
+		Id: commentId,
+		User: models.CommentUser{
+			UserId: userId,
+			FullName: user.FullName,
+			Email: user.Email,
+		},
+		Forum: forumId,
+		Page: page,
+		Body: body,
+		Parent: parentId,
+	}
+
+	if err := comments.Insert(comment); err != nil {
+		return nil, fmt.Errorf("Database error. Err: %v", err)
+	}
+
+	return comment, nil
 }

@@ -12,6 +12,7 @@ type UserService struct {
 type User struct {
     Id bson.ObjectId `bson:"_id"`
     FullName string `bson:",omitempty"`
+	Email string `bson:",comitempty"`
     Website string `bson:",omitempty"`
     Location string `bson:",omitempty"`
     Bio string `bson:",omitempty"`
