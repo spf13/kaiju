@@ -20,7 +20,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/codegangsta/martini"
 	"github.com/spf13/cobra"
@@ -28,6 +27,7 @@ import (
 	"github.com/spf13/viper"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
+	"encoding/json"
 )
 
 var Verbose bool
@@ -66,8 +66,8 @@ func RootRun(cmd *cobra.Command, args []string) {
 	m.Map(db)
 
 	r.Get("/", index)
-	r.Get("/comments/:forum/:post", comments)
-	r.Put("/comment", PostCommentResource)
+	r.Get("/comments/:forum/:page", GetAllCommentsResource)
+	r.Post("/comment", PostCommentResource)
 
 	m.Action(r.Handle)
 
@@ -81,7 +81,6 @@ func db_init() {
 		panic(err)
 	}
 	db = session.DB(viper.GetString("dbname"))
-	defer session.Close()
 }
 
 func init() {
@@ -145,15 +144,16 @@ func InitializeFixtures(cmd *cobra.Command, args []string) {
 }
 
 func index() template.HTML {
-	return	template.HTML(`
+	return template.HTML(`
 <html>
 <body>
-<form action="/comment" method="PUT">
-  <input type="hidden" name="forum" value="dans website" />
-  <input type="hidden" name="page" value="starcraft is awesome.html" />
-  <input type="hidden" name="email" value="danny.gottlieb@gmail.com" />
+<form action="/comment" method="POST">
+  <input type="hidden" name="userId" value="5346e476331583002c7de60d" />
+  <input type="hidden" name="forum" value="5346e494331583002c7de60e" />
+  <input type="hidden" name="parent" value="" />
+  <input type="hidden" name="page" value="dans sc2 blog post" />
+  <input type="hidden" name="body" value="sc2 is awesome. Toss OP" />
   <input type="hidden" name="timestamp" value="123456789" />
-  <input type="hidden" name="body" value="I think starcraft is cool, but toss OP." />
   <input type="submit" />
 </form>
 </body>
@@ -161,13 +161,28 @@ func index() template.HTML {
 `)
 }
 
-func comments(database *mgo.Database, parms martini.Params) (int, string) {
-	forum := parms["forum"]
-	post := parms["post"]
-	return http.StatusOK, strings.Join([]string{"ah, yeah: ", forum, post}, " ")
+func GetAllCommentsResource(db *mgo.Database, parms martini.Params) string {
+	forumStr := parms["forum"]
+	if bson.IsObjectIdHex(forumStr) == false {
+		return fmt.Sprintf("`forum` is not valid. Received: `%v`", forumStr)
+	}
+	forum := bson.ObjectIdHex(forumStr)
+	page := parms["page"]
+
+	comments, err := GetAllComments(db, forum, page)
+	if err != nil {
+		return fmt.Sprintf("Error: %v", err)
+	}
+
+	bytes, err := json.Marshal(comments)
+	if err != nil {
+		return fmt.Sprintf("Error: %v", err)
+	}
+
+	return string(bytes)
 }
 
-func PostCommentResource(request *http.Request, db mgo.Database) string {
+func PostCommentResource(request *http.Request, db *mgo.Database) string {
 	if err := request.ParseForm(); err != nil {
 		return err.Error()
 	}
@@ -176,7 +191,7 @@ func PostCommentResource(request *http.Request, db mgo.Database) string {
 	if bson.IsObjectIdHex(userIdStr) == false {
 		return fmt.Sprintf("`userId` is not valid. Received: `%v`", userIdStr)
 	}
-	userId := bson.ObjectIdHex(userIdStr);
+	userId := bson.ObjectIdHex(userIdStr)
 
 	forumIdStr := request.FormValue("forum")
 	if bson.IsObjectIdHex(forumIdStr) == false {
@@ -209,7 +224,7 @@ func PostCommentResource(request *http.Request, db mgo.Database) string {
 	return fmt.Sprintf("Accepted. Comment ID: %v", comment.Id)
 }
 
-func PostComment(db mgo.Database, userId bson.ObjectId, forumId bson.ObjectId,
+func PostComment(db *mgo.Database, userId bson.ObjectId, forumId bson.ObjectId,
 	page string, body string, parentId *bson.ObjectId) (*models.Comment, error) {
 
 	users := db.C("users")
@@ -229,13 +244,13 @@ func PostComment(db mgo.Database, userId bson.ObjectId, forumId bson.ObjectId,
 	comment := &models.Comment{
 		Id: commentId,
 		User: models.CommentUser{
-			UserId: userId,
+			UserId:   userId,
 			FullName: user.FullName,
-			Email: user.Email,
+			Email:    user.Email,
 		},
-		Forum: forumId,
-		Page: page,
-		Body: body,
+		Forum:  forumId,
+		Page:   page,
+		Body:   body,
 		Parent: parentId,
 	}
 
@@ -244,4 +259,59 @@ func PostComment(db mgo.Database, userId bson.ObjectId, forumId bson.ObjectId,
 	}
 
 	return comment, nil
+}
+
+func _getAllCommentsWithQuery(db *mgo.Database, query bson.M) ([]*models.Comment, error) {
+	ret := make([]*models.Comment, 0, 0)
+	comments := db.C("comments")
+	if err := comments.Find(query).All(&ret); err != nil {
+		return nil, err
+	}
+
+	return ret, nil
+}
+
+func GetAllComments(db *mgo.Database,
+	forumId bson.ObjectId,
+	page string) ([]*models.Comment, error) {
+
+	return _getAllCommentsWithQuery(db, nil)
+}
+
+func GetTopLevelComments(db *mgo.Database,
+	forumId bson.ObjectId,
+	page string) ([]*models.Comment, error) {
+
+	return _getAllCommentsWithQuery(db,
+		bson.M{
+			"Forum": forumId,
+			"Page": page,
+			"Parent": nil,
+		})
+}
+
+func GetCommentsWithAncestor(db *mgo.Database,
+	forumId bson.ObjectId,
+	page string,
+	ancestorId *bson.ObjectId) ([]*models.Comment, error) {
+
+	return _getAllCommentsWithQuery(db,
+		bson.M{
+			"Forum": forumId,
+			"Page": page,
+			"Parent": ancestorId,
+		})
+}
+
+func GetCommentsSinceTime(db *mgo.Database,
+	forumId bson.ObjectId,
+	page string,
+	since bson.ObjectId) ([]*models.Comment, error) {
+
+	return _getAllCommentsWithQuery(db,
+		bson.M{
+			"Forum": forumId,
+			"Page": page,
+			"_id": bson.M{"$gt": since},
+		})
 }
