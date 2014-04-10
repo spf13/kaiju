@@ -15,9 +15,9 @@
 package main
 
 import (
-    "github.com/spf13/pandora/commands"
+	"github.com/spf13/kaiju/commands"
 )
 
 func main() {
-    commands.Execute()
+	commands.Execute()
 }

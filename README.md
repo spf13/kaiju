@@ -1,4 +1,4 @@
-pandora
+Kaiju
 =======
 
 Open source discussion server 
