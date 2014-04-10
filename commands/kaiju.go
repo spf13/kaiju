@@ -24,6 +24,7 @@ import (
 	"github.com/codegangsta/martini"
 	"github.com/spf13/cobra"
 	"github.com/spf13/kaiju/models"
+	"github.com/spf13/viper"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
 )
@@ -31,6 +32,9 @@ import (
 var Verbose bool
 var Port int
 var DBName string
+var DBPort int
+var DBHost string
+var CfgFile string
 var db *mgo.Database
 
 func Execute() {
@@ -70,18 +74,33 @@ func RootRun(cmd *cobra.Command, args []string) {
 }
 
 func db_init() {
-	session, err := mgo.Dial("localhost:27017")
+	session, err := mgo.Dial(viper.GetString("dbhost") + ":" + viper.GetString("dbport"))
 	if err != nil {
 		panic(err)
 	}
-	db = session.DB(DBName)
+	db = session.DB(viper.GetString("dbname"))
 	defer session.Close()
 }
 
 func init() {
+
+	Root.PersistentFlags().StringVar(&CfgFile, "config", "", "config file (default is path/config.yaml|json|toml)")
 	Root.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
 	Root.Flags().IntVarP(&Port, "port", "p", 2714, "port number to run on")
 	Root.Flags().StringVarP(&DBName, "dbname", "d", "kaiju", "name of the database")
+	Root.Flags().IntVar(&DBPort, "dbport", 27017, "port to access mongoDB")
+	Root.Flags().StringVar(&DBHost, "dbhost", "localhost", "host where mongoDB is")
+
+	viper.SetConfigName(CfgFile)
+	viper.AddConfigPath("/etc/kaiju/")
+	viper.ReadInConfig()
+
+	viper.Set("port", Port)
+	viper.Set("dbname", DBName)
+	viper.Set("dbport", DBPort)
+	viper.Set("dbhost", DBHost)
+	viper.Set("verbose", Verbose)
+
 	db_init()
 }
 
