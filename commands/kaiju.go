@@ -23,6 +23,7 @@ import (
 
 	"github.com/codegangsta/martini"
 	"github.com/spf13/cobra"
+	jww "github.com/spf13/jwalterweatherman"
 	"github.com/spf13/kaiju/models"
 	"github.com/spf13/viper"
 	"labix.org/v2/mgo"
@@ -93,7 +94,11 @@ func init() {
 
 	viper.SetConfigName(CfgFile)
 	viper.AddConfigPath("./")
-	viper.ReadInConfig()
+	viper.AddConfigPath("/etc/kaiju/")
+	err := viper.ReadInConfig()
+	if err != nil {
+		jww.ERROR.Println("Config not found... using only defaults, stuff may not work")
+	}
 
 	viper.Set("port", Port)
 	viper.Set("dbname", DBName)
