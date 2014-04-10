@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 
 	"github.com/codegangsta/martini"
 	"github.com/spf13/cobra"
@@ -31,6 +30,7 @@ import (
 
 var Verbose bool
 var Port int
+var Host string
 var DBName string
 var DBPort int
 var DBHost string
@@ -44,7 +44,6 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(-1)
 	}
-
 }
 
 func AddCommands() {
@@ -59,6 +58,11 @@ var Root = &cobra.Command{
 }
 
 func RootRun(cmd *cobra.Command, args []string) {
+	socketIOInit()
+	socketServerRun()
+}
+
+func martiniInit() {
 	m := martini.New()
 	r := martini.NewRouter()
 
@@ -70,8 +74,8 @@ func RootRun(cmd *cobra.Command, args []string) {
 
 	m.Action(r.Handle)
 
-	fmt.Println("Running on port " + strconv.Itoa(Port))
-	http.ListenAndServe(":"+strconv.Itoa(Port), m)
+	fmt.Println("Running on port " + viper.GetString("port"))
+	http.ListenAndServe(":"+viper.GetString("port"), m)
 }
 
 func db_init() {
@@ -87,6 +91,7 @@ func init() {
 	Root.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
 	Root.Flags().IntVarP(&Port, "port", "p", 2714, "port number to run on")
 	Root.Flags().StringVarP(&DBName, "dbname", "d", "kaiju", "name of the database")
+	Root.Flags().StringVarP(&Host, "host", "h", "localhost", "host to run on")
 	Root.Flags().IntVar(&DBPort, "dbport", 27017, "port to access mongoDB")
 	Root.Flags().StringVar(&DBHost, "dbhost", "localhost", "host where mongoDB is")
 
@@ -99,6 +104,7 @@ func init() {
 	}
 
 	viper.Set("port", Port)
+	viper.Set("host", Host)
 	viper.Set("dbname", DBName)
 	viper.Set("dbport", DBPort)
 	viper.Set("dbhost", DBHost)
