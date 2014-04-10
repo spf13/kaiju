@@ -14,3 +14,10 @@ var user = {
     ]
 }
 db.getSiblingDB("kaiju").users.insert(user)
+
+var forum = {
+    _id: new ObjectId("5346e494331583002c7de60e"),
+    name: "Steve's blog on how to improve soccer",
+    adminusers: [new ObjectId(), new ObjectId()]
+}
+db.getSiblingDB("kaiju").forums.insert(forum)
