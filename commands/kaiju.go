@@ -24,6 +24,7 @@ import (
 
 	"github.com/codegangsta/martini"
 	"github.com/spf13/cobra"
+	jww "github.com/spf13/jwalterweatherman"
 	"github.com/spf13/kaiju/models"
 	"github.com/spf13/viper"
 	"labix.org/v2/mgo"
@@ -94,7 +95,11 @@ func init() {
 
 	viper.SetConfigName(CfgFile)
 	viper.AddConfigPath("./")
-	viper.ReadInConfig()
+	viper.AddConfigPath("/etc/kaiju/")
+	err := viper.ReadInConfig()
+	if err != nil {
+		jww.ERROR.Println("Config not found... using only defaults, stuff may not work")
+	}
 
 	viper.Set("port", Port)
 	viper.Set("dbname", DBName)
@@ -145,7 +150,7 @@ func InitializeFixtures(cmd *cobra.Command, args []string) {
 }
 
 func index() template.HTML {
-	return	template.HTML(`
+	return template.HTML(`
 <html>
 <body>
 <form action="/comment" method="PUT">
@@ -176,7 +181,7 @@ func PostCommentResource(request *http.Request, db mgo.Database) string {
 	if bson.IsObjectIdHex(userIdStr) == false {
 		return fmt.Sprintf("`userId` is not valid. Received: `%v`", userIdStr)
 	}
-	userId := bson.ObjectIdHex(userIdStr);
+	userId := bson.ObjectIdHex(userIdStr)
 
 	forumIdStr := request.FormValue("forum")
 	if bson.IsObjectIdHex(forumIdStr) == false {
@@ -229,13 +234,13 @@ func PostComment(db mgo.Database, userId bson.ObjectId, forumId bson.ObjectId,
 	comment := &models.Comment{
 		Id: commentId,
 		User: models.CommentUser{
-			UserId: userId,
+			UserId:   userId,
 			FullName: user.FullName,
-			Email: user.Email,
+			Email:    user.Email,
 		},
-		Forum: forumId,
-		Page: page,
-		Body: body,
+		Forum:  forumId,
+		Page:   page,
+		Body:   body,
 		Parent: parentId,
 	}
 
