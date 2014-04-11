@@ -1,4 +1,4 @@
-Requires Node.JS 0.8.x to build. 
+Requires Node.JS 0.8.x to build.
 
 - npm install
 - make

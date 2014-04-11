@@ -23,7 +23,7 @@ Kaiju.prototype.postComment = function(message) {
 };
 
 Kaiju.prototype.getComments = function() {
-    console.log('getComments');
+    console.log('getComments', this.forum, this.page);
     this.socket.emit('getComments', {
         forum: this.forum,
         page: this.page
