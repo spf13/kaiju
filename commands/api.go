@@ -189,7 +189,10 @@ func GetAllComments(db *mgo.Database,
 	forumId bson.ObjectId,
 	page string) ([]*models.Comment, error) {
 
-	return _getAllCommentsWithQuery(db, nil)
+	return _getAllCommentsWithQuery(db, bson.M{
+		"forum": forumId,
+		"page":  page,
+	})
 }
 
 func GetTopLevelComments(db *mgo.Database,
@@ -198,9 +201,9 @@ func GetTopLevelComments(db *mgo.Database,
 
 	return _getAllCommentsWithQuery(db,
 		bson.M{
-			"Forum":  forumId,
-			"Page":   page,
-			"Parent": nil,
+			"forum":  forumId,
+			"page":   page,
+			"parent": nil,
 		})
 }
 
@@ -211,9 +214,9 @@ func GetCommentsWithAncestor(db *mgo.Database,
 
 	return _getAllCommentsWithQuery(db,
 		bson.M{
-			"Forum":     forumId,
-			"Page":      page,
-			"Ancestors": ancestorId,
+			"forum":     forumId,
+			"page":      page,
+			"ancestors": ancestorId,
 		})
 }
 
@@ -224,8 +227,8 @@ func GetCommentsSinceTime(db *mgo.Database,
 
 	return _getAllCommentsWithQuery(db,
 		bson.M{
-			"Forum": forumId,
-			"Page":  page,
+			"forum": forumId,
+			"page":  page,
 			"_id":   bson.M{"$gt": since},
 		})
 }
