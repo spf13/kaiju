@@ -5,13 +5,13 @@ import (
 	"html/template"
 	"net/http"
 
+	"encoding/json"
+
 	"github.com/codegangsta/martini"
 	"github.com/spf13/kaiju/models"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
-	"encoding/json"
 )
-
 
 func index() template.HTML {
 	return template.HTML(`
@@ -52,46 +52,68 @@ func GetAllCommentsResource(db *mgo.Database, parms martini.Params) string {
 	return string(bytes)
 }
 
-func PostCommentResource(request *http.Request, db *mgo.Database) string {
+func PostCommentHandler(request *http.Request, db *mgo.Database) string {
 	if err := request.ParseForm(); err != nil {
 		return err.Error()
 	}
 
 	userIdStr := request.FormValue("userId")
-	if bson.IsObjectIdHex(userIdStr) == false {
-		return fmt.Sprintf("`userId` is not valid. Received: `%v`", userIdStr)
-	}
-	userId := bson.ObjectIdHex(userIdStr)
-
 	forumIdStr := request.FormValue("forum")
-	if bson.IsObjectIdHex(forumIdStr) == false {
-		return fmt.Sprintf("`forum` is not valid. Received: `%v`", forumIdStr)
-	}
-	forumId := bson.ObjectIdHex(forumIdStr)
-
+	page := request.FormValue("page")
+	body := request.FormValue("body")
 	parentIdStr := request.FormValue("parent")
-	var parent *bson.ObjectId
-	switch {
-	case parentIdStr == "":
-	case bson.IsObjectIdHex(parentIdStr):
-		parentIdObj := bson.ObjectIdHex(parentIdStr)
-		parent = &parentIdObj
-	default:
-		return fmt.Sprintf("`parent` is not valid. Received: `%v`", parentIdStr)
+
+	userId, forumId, page, body, parentId, err := PostCommentResource(userIdStr,
+		forumIdStr,
+		page,
+		body,
+		parentIdStr)
+
+	if err != nil {
+		return err.Error()
 	}
 
 	comment, err := PostComment(db,
 		userId,
 		forumId,
-		request.FormValue("page"),
-		request.FormValue("body"),
-		parent)
+		page,
+		body,
+		parentId)
 
 	if err != nil {
 		return err.Error()
 	}
 
 	return fmt.Sprintf("Accepted. Comment ID: %v", comment.Id)
+}
+
+func PostCommentResource(userIdStr string, forumIdStr string, pageStr string, bodyStr string, parentIdStr string) (userId bson.ObjectId, forumId bson.ObjectId, page string, body string, parentId *bson.ObjectId, err error) {
+	page = pageStr
+	body = bodyStr
+
+	if bson.IsObjectIdHex(userIdStr) == false {
+		err = fmt.Errorf("`userId` is not valid. Received: `%v`", userIdStr)
+		return
+	}
+	userId = bson.ObjectIdHex(userIdStr)
+
+	if bson.IsObjectIdHex(forumIdStr) == false {
+		err = fmt.Errorf("`forum` is not valid. Received: `%v`", forumIdStr)
+		return
+	}
+	forumId = bson.ObjectIdHex(forumIdStr)
+
+	switch {
+	case parentIdStr == "":
+	case bson.IsObjectIdHex(parentIdStr):
+		parentIdObj := bson.ObjectIdHex(parentIdStr)
+		parentId = &parentIdObj
+	default:
+		err = fmt.Errorf("`parent` is not valid. Received: `%v`", parentIdStr)
+		return
+	}
+
+	return
 }
 
 func PostComment(db *mgo.Database, userId bson.ObjectId, forumId bson.ObjectId,
@@ -135,14 +157,14 @@ func PostComment(db *mgo.Database, userId bson.ObjectId, forumId bson.ObjectId,
 	comment := &models.Comment{
 		Id: commentId,
 		User: models.CommentUser{
-			Id:   userId,
+			Id:       userId,
 			FullName: user.FullName,
 			Email:    user.Email,
 		},
-		Forum:  forumId,
-		Page:   page,
-		Body:   body,
-		Parent: parentId,
+		Forum:     forumId,
+		Page:      page,
+		Body:      body,
+		Parent:    parentId,
 		Ancestors: ancestors,
 	}
 
@@ -176,8 +198,8 @@ func GetTopLevelComments(db *mgo.Database,
 
 	return _getAllCommentsWithQuery(db,
 		bson.M{
-			"Forum": forumId,
-			"Page": page,
+			"Forum":  forumId,
+			"Page":   page,
 			"Parent": nil,
 		})
 }
@@ -189,8 +211,8 @@ func GetCommentsWithAncestor(db *mgo.Database,
 
 	return _getAllCommentsWithQuery(db,
 		bson.M{
-			"Forum": forumId,
-			"Page": page,
+			"Forum":     forumId,
+			"Page":      page,
 			"Ancestors": ancestorId,
 		})
 }
@@ -203,7 +225,7 @@ func GetCommentsSinceTime(db *mgo.Database,
 	return _getAllCommentsWithQuery(db,
 		bson.M{
 			"Forum": forumId,
-			"Page": page,
-			"_id": bson.M{"$gt": since},
+			"Page":  page,
+			"_id":   bson.M{"$gt": since},
 		})
 }
