@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/codegangsta/martini"
 	"github.com/spf13/cobra"
 	jww "github.com/spf13/jwalterweatherman"
 	"github.com/spf13/kaiju/models"
@@ -60,25 +59,6 @@ func RootRun(cmd *cobra.Command, args []string) {
 	socketIOInit()
 	martiniInit()
 	socketServerRun()
-}
-
-func martiniInit() {
-	m := martini.New()
-	r := martini.NewRouter()
-
-	m.Map(db)
-
-	r.Get("/", index)
-	r.Get("/comments/:forum/:page", GetAllCommentsResource)
-	r.Post("/comment", PostCommentResource)
-
-	m.Action(r.Handle)
-
-	fmt.Println("Running on port " + viper.GetString("port"))
-
-	sio.Handle("/", m)
-	//http.Handle("/", m)
-	//http.ListenAndServe(":"+viper.GetString("port"), m)
 }
 
 func db_init() {
