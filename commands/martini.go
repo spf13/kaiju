@@ -26,8 +26,8 @@ import (
 	"github.com/codegangsta/martini"
 	"github.com/spf13/viper"
 
-	"github.com/martini-contrib/oauth2"
-	"github.com/martini-contrib/sessions"
+	//"github.com/martini-contrib/oauth2"
+	//"github.com/martini-contrib/sessions"
 )
 
 func martiniInit() {
@@ -35,11 +35,22 @@ func martiniInit() {
 	r := martini.NewRouter()
 
 	m.Map(db)
+	//m.Use(sessions.Sessions("my_session", sessions.NewCookieStore([]byte("secret123"))))
+	//m.Use(oauth2.Github(&oauth2.Options{
+	// 	ClientId:	  "64a641523f31dd5bfe4b",
+	// 	ClientSecret: "4fe3fbbca262835c424ca6a80aec6c6cb4228037",
+	// 	RedirectURL:  "http://localhost:2714/github_callback",
+	// 	Scopes:		  []string{"user:email"},
+	//}))
 
 	r.Get("/", index)
 	r.Get("/comments/:forum/:page", GetAllCommentsResource)
-	r.Post("/comment", PostCommentResource)
-	r.Get("redirect_url", RedirectUrl)
+	r.Post("/comment", PostCommentHandler)
+	//r.Get("/github_redirect", RedirectUrl)
+	//r.Get("/github_callback", func(request *http.Request) string {
+	// 	request.ParseForm()
+	// 	return fmt.Sprintf("%+v", request)
+	//})
 
 	m.Action(r.Handle)
 
@@ -63,6 +74,8 @@ func index() template.HTML {
   <input type="hidden" name="timestamp" value="123456789" />
   <input type="submit" />
 </form>
+<br/>
+<a href="https://github.com/login/oauth/authorize?client_id=64a641523f31dd5bfe4b&redirect_uri=http://localhost:2314/github_callback&scope=user:email">Login</a>
 </body>
 </html>
 `)
@@ -94,7 +107,8 @@ func PostCommentHandler(request *http.Request, db *mgo.Database) string {
 		return err.Error()
 	}
 
-	userIdStr := request.FormValue("userId")
+	username := request.FormValue("username")
+	useremail := request.FormValue("useremail")
 	forumIdStr := request.FormValue("forum")
 	page := request.FormValue("page")
 	body := request.FormValue("body")
@@ -123,9 +137,3 @@ func PostCommentHandler(request *http.Request, db *mgo.Database) string {
 
 	return fmt.Sprintf("Accepted. Comment ID: %v", comment.Id)
 }
-
-func RedirectUrl(session sessions.Session) string {
-  session.Set("some", "thing")
-  return "OK"
-})
-

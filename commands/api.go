@@ -7,15 +7,9 @@ import (
 	"labix.org/v2/mgo/bson"
 )
 
-func PostCommentResource(userIdStr string, forumIdStr string, pageStr string, bodyStr string, parentIdStr string) (userId bson.ObjectId, forumId bson.ObjectId, page string, body string, parentId *bson.ObjectId, err error) {
+func PostCommentResource(forumIdStr string, pageStr string, bodyStr string, parentIdStr string) (userId bson.ObjectId, forumId bson.ObjectId, page string, body string, parentId *bson.ObjectId, err error) {
 	page = pageStr
 	body = bodyStr
-
-	if bson.IsObjectIdHex(userIdStr) == false {
-		err = fmt.Errorf("`userId` is not valid. Received: `%v`", userIdStr)
-		return
-	}
-	userId = bson.ObjectIdHex(userIdStr)
 
 	if bson.IsObjectIdHex(forumIdStr) == false {
 		err = fmt.Errorf("`forum` is not valid. Received: `%v`", forumIdStr)
@@ -36,7 +30,7 @@ func PostCommentResource(userIdStr string, forumIdStr string, pageStr string, bo
 	return
 }
 
-func PostComment(db *mgo.Database, userId bson.ObjectId, forumId bson.ObjectId,
+func PostComment(db *mgo.Database, fullname string, email string, forumId bson.ObjectId,
 	page string, body string, parentId *bson.ObjectId) (*models.Comment, error) {
 
 	users := db.C("users")
@@ -44,11 +38,15 @@ func PostComment(db *mgo.Database, userId bson.ObjectId, forumId bson.ObjectId,
 	comments := db.C("comments")
 
 	user := &models.User{}
-	err := users.Find(bson.M{"_id": userId}).One(user)
+	err := users.Find(bson.M{"email": email}).One(user)
 	switch err {
 	case nil:
 	case mgo.ErrNotFound:
-		return nil, fmt.Errorf("User not found. Id: `%v`", userId)
+		user = &models.User{FullName: fullname, Email: email}
+		users.Insert(user)
+		if err = users.Find(bson.M{"email": email}).One(user); err != nil {
+			return nil, fmt.Errorf("Error inserting user. Err: %v", err)
+		}
 	default:
 		return nil, fmt.Errorf("Error finding user. Err: %v", err)
 	}
@@ -77,7 +75,7 @@ func PostComment(db *mgo.Database, userId bson.ObjectId, forumId bson.ObjectId,
 	comment := &models.Comment{
 		Id: commentId,
 		User: models.CommentUser{
-			Id:       userId,
+			Id:       user.Id,
 			FullName: user.FullName,
 			Email:    user.Email,
 		},
