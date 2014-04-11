@@ -36,6 +36,7 @@ func martiniInit() {
 	r.Get("/", index)
 	r.Get("/comments/:forum/:page", GetAllCommentsResource)
 	r.Post("/comment", PostCommentResource)
+	r.Get("redirect_url", RedirectUrl)
 
 	m.Action(r.Handle)
 
@@ -119,3 +120,9 @@ func PostCommentHandler(request *http.Request, db *mgo.Database) string {
 
 	return fmt.Sprintf("Accepted. Comment ID: %v", comment.Id)
 }
+
+func RedirectUrl(session sessions.Session) string {
+  session.Set("some", "thing")
+  return "OK"
+})
+
