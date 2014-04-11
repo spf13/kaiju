@@ -27,7 +27,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/martini-contrib/oauth2"
-  "github.com/martini-contrib/sessions"
+	"github.com/martini-contrib/sessions"
 )
 
 func martiniInit() {
