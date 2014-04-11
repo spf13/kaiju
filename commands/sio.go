@@ -98,10 +98,12 @@ func onPong(ns *socketio.NameSpace, message string) {
 }
 
 func onGetComments(ns *socketio.NameSpace, message string) {
-	jww.INFO.Println("Comment Received")
+	jww.INFO.Println("Comment request Received", message)
 
 	var jsonMap map[string]string
 	err := json.Unmarshal([]byte(message), &jsonMap)
+
+	fmt.Println(jsonMap)
 
 	//forumStr := jsonMap["forum"]
 	forumStr := "5346e494331583002c7de60e"
@@ -120,7 +122,8 @@ func onGetComments(ns *socketio.NameSpace, message string) {
 		jww.ERROR.Printf("Error: %v", err)
 	}
 
-	ns.Emit("commentsFor", bComments)
+	fmt.Println(string(bComments))
+	ns.Emit("commentsFor", string(bComments))
 
 	if err != nil {
 		jww.ERROR.Println(err.Error())
@@ -132,6 +135,8 @@ func onPostComment(ns *socketio.NameSpace, message string) {
 
 	var jsonMap map[string]string
 	err := json.Unmarshal([]byte(message), &jsonMap)
+
+	fmt.Printf("%#v", jsonMap)
 
 	if err != nil {
 		jww.ERROR.Println(err.Error())
@@ -167,6 +172,6 @@ func onPostComment(ns *socketio.NameSpace, message string) {
 		jww.ERROR.Printf("Error: %v", err)
 	}
 
-	ns.Emit("commentPosted", bComment)
-	fmt.Printf("%#v", jsonMap)
+	sio.Broadcast("commentPosted", string(bComment))
+	fmt.Printf("%#v", string(bComment))
 }
