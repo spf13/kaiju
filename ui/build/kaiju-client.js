@@ -17448,7 +17448,7 @@ Kaiju.prototype.renderComment = function(comment) {
                 name: comment.User.FullName,
                 email: comment.User.Email
             },
-            verb: comment.Parent ? "repied" : "said",
+            verb: comment.Parent ? "replied" : "said",
             body: comment.Body,
             id: comment.Id,
             parentId: comment.Parent || "null"
@@ -17473,7 +17473,6 @@ Kaiju.prototype.renderComment = function(comment) {
         }
         $mainThread.append($comment);
     }
-
     $comment.find('a.add-comment').on('click', _.bind(this.onClickShowCommentForm, this));
 };
 
@@ -17490,8 +17489,7 @@ Kaiju.prototype.onSubmitCommentForm = function(evt) {
         parent: form.parent.value
     });
 
-    this.commentForm.addClass('hidden').detach();
-
+    this.commentForm.addClass('hidden');
 };
 
 Kaiju.prototype.onClickShowCommentForm = function(evt) {
