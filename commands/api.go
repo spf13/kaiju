@@ -43,8 +43,10 @@ func PostComment(db *mgo.Database, fullname string, email string, forumId bson.O
 	switch err {
 	case nil:
 	case mgo.ErrNotFound:
-		user = &models.User{FullName: fullname, Email: email}
-		users.Insert(user)
+		user = &models.User{Id: bson.NewObjectId(), FullName: fullname, Email: email}
+		fmt.Println("Inserting User", user)
+		err = users.Insert(user)
+		fmt.Println(err)
 		if err = users.Find(bson.M{"email": email}).One(user); err != nil {
 			return nil, fmt.Errorf("Error inserting user. Err: %v", err)
 		}
