@@ -17505,7 +17505,7 @@ Kaiju.prototype.onClickShowCommentForm = function(evt) {
         this.commentForm[0].parent.value = parent;
     }
     else {
-        this.commentForm.prepend(this.$el);
+        this.commentForm.prependTo(this.$el);
         this.commentForm[0].parent.value = "";
     }
     this.showCommentForm();
