@@ -16,7 +16,6 @@ package commands
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 
 	"github.com/codegangsta/martini"
@@ -59,6 +58,7 @@ var Root = &cobra.Command{
 
 func RootRun(cmd *cobra.Command, args []string) {
 	socketIOInit()
+	martiniInit()
 	socketServerRun()
 }
 
@@ -75,7 +75,10 @@ func martiniInit() {
 	m.Action(r.Handle)
 
 	fmt.Println("Running on port " + viper.GetString("port"))
-	http.ListenAndServe(":"+viper.GetString("port"), m)
+
+	sio.Handle("/", m)
+	//http.Handle("/", m)
+	//http.ListenAndServe(":"+viper.GetString("port"), m)
 }
 
 func db_init() {
