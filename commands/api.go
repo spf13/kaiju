@@ -8,7 +8,7 @@ import (
 	"labix.org/v2/mgo/bson"
 )
 
-func PostCommentResource(forumIdStr string, pageStr string, bodyStr string, parentIdStr string) (userId bson.ObjectId, forumId bson.ObjectId, page string, body string, parentId *bson.ObjectId, err error) {
+func PostCommentResource(forumIdStr string, pageStr string, bodyStr string, parentIdStr string) (forumId bson.ObjectId, page string, body string, parentId *bson.ObjectId, err error) {
 	page = pageStr
 	body = bodyStr
 
@@ -82,6 +82,7 @@ func PostComment(db *mgo.Database, fullname string, email string, forumId bson.O
 		},
 		Forum:     forumId,
 		Page:      page,
+		Timestamp: bson.Now(),
 		Body:      body,
 		Parent:    parentId,
 		Ancestors: ancestors,

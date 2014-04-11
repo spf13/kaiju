@@ -143,16 +143,18 @@ func onPostComment(ns *socketio.NameSpace, message string) {
 	}
 
 	forumStr := "5346e494331583002c7de60e"
+	fullname := jsonMap["fullname"]
+	email := jsonMap["email"]
 
-	userId, forumId, page, body, parentId, err := PostCommentResource("5346e476331583002c7de60d",
-		forumStr,
+	forumId, page, body, parentId, err := PostCommentResource(forumStr,
 		//jsonMap["forum"],
 		jsonMap["page"],
 		jsonMap["body"],
 		jsonMap["parent"])
 
 	comment, err := PostComment(db,
-		userId,
+		fullname,
+		email,
 		forumId,
 		page,
 		body,

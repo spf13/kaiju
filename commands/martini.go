@@ -115,7 +115,7 @@ func PostCommentHandler(request *http.Request, db *mgo.Database) string {
 	body := request.FormValue("body")
 	parentIdStr := request.FormValue("parent")
 
-	userId, forumId, page, body, parentId, err := PostCommentResource(userIdStr,
+	forumId, page, body, parentId, err := PostCommentResource(
 		forumIdStr,
 		page,
 		body,
@@ -126,7 +126,8 @@ func PostCommentHandler(request *http.Request, db *mgo.Database) string {
 	}
 
 	comment, err := PostComment(db,
-		userId,
+		username,
+		useremail,
 		forumId,
 		page,
 		body,
