@@ -17432,7 +17432,6 @@ Kaiju.prototype.handleCommentsFor = function(data) {
 };
 
 Kaiju.prototype.handleCommentPosted = function(data) {
-    console.log("handleCommentPosted", JSON.parse(data));
     var comment = JSON.parse(data);
 
     if (comment) {
@@ -17484,38 +17483,39 @@ Kaiju.prototype.onSubmitCommentForm = function(evt) {
 
     var form = this.commentForm[0];
 
-    this.commentForm.addClass('hidden').detach();
-
     this.postComment({
         fullname: form.user.value,
         email: form.email.value,
         body: form.body.value,
         parent: form.parent.value
     });
+
+    this.commentForm.addClass('hidden').detach();
+
 };
 
 Kaiju.prototype.onClickShowCommentForm = function(evt) {
     evt.stopPropagation();
     evt.preventDefault();
 
-    this.showCommentForm();
-
     var $target = $(evt.currentTarget),
         parent = $target.data('in-reply-to');
 
     if (parent) {
         this.commentForm.detach();
-        this.commentForm.appendTo($target.closest('div.comment'));
+        this.commentForm.insertAfter($target.closest('div.comment').find('> div.comment-actions'));
+        this.commentForm[0].parent.value = parent;
     }
     else {
-        this.commentForm.appendTo(this.$el);
+        this.commentForm.prepend(this.$el);
+        this.commentForm[0].parent.value = "";
     }
-    this.commentForm[0].parent.value = parent || null;
+    this.showCommentForm();
 };
 
 Kaiju.prototype.showCommentForm = function() {
     this.commentForm.removeClass('hidden');
-    this.commentForm.find('input, textarea').val('');
+    // this.commentForm.find('input, textarea').val('');
 };
 
 Kaiju.prototype.hideCommentForm = function() {
@@ -17526,7 +17526,7 @@ $(function() {
     var kaiju = new Kaiju({
         url: "http://10.4.126.233:2714",
         forum: "5346e494331583002c7de60e",
-        page: "local_test_page_a",
+        page: "local_test_page_ab",
         selector: "section.comments-section"
     });
 
