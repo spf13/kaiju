@@ -17383,12 +17383,13 @@ var Kaiju = function(options) {
     var socket = this.socket = io.connect(options.url);
 
     this.socket.on('commentsFor', _.bind(this.handleCommentsFor, this));
+    this.socket.on('commentPosted', _.bind(this.handleCommentPosted, this));
 
     this._comments = { };
 
     this.commentTemplate = _.template(
         '<div class="comment" data-id="<%= id %>">' +
-        '<div class="comment-header"><strong><%= user.name %></strong> (<%= user.email %>):</div>' +
+        '<div class="comment-header"><strong><%= user.name %></strong> (<%= user.email %>) <%= verb %>:</div>' +
         '<div class="comment-body"><%= body %></div>' +
         '<div class="comment-actions"><small><a class="add-comment" data-in-reply-to="<%= id %>" style="cursor:pointer;">Reply to this</a></small></div>' +
         '</div>")');
@@ -17421,36 +17422,34 @@ Kaiju.prototype.getComments = function() {
 };
 
 Kaiju.prototype.handleCommentsFor = function(data) {
-    var commentTemplate = this.commentTemplate,
-        threadTemplate = this.threadTemplate,
-        self = this;
-
+    var self = this;
     data = JSON.parse(data);
-
     if (_.isArray(data)) {
-
         _.each(data, function(comment) {
-            self._comments[comment.Id] = comment;
+            self.renderComment(comment);
         });
-
-        var $mainThread = $(threadTemplate());
-        this.$el.empty().append($mainThread);
-
-        _.each(data, function(comment) {
-            self.renderComment(comment, $mainThread);
-        });
-
     }
 };
 
-Kaiju.prototype.renderComment = function(comment, $thread) {
+Kaiju.prototype.handleCommentPosted = function(data) {
+    console.log("handleCommentPosted", JSON.parse(data));
+    var comment = JSON.parse(data);
+
+    if (comment) {
+        this.renderComment(comment);
+    }
+};
+
+Kaiju.prototype.renderComment = function(comment) {
     var commentTemplate = this.commentTemplate,
+        threadTemplate = this.threadTemplate,
         parent = comment.Parent,
         $comment = $(commentTemplate({
             user: {
                 name: comment.User.FullName,
                 email: comment.User.Email
             },
+            verb: comment.Parent ? "repied" : "said",
             body: comment.Body,
             id: comment.Id,
             parentId: comment.Parent || "null"
@@ -17458,12 +17457,24 @@ Kaiju.prototype.renderComment = function(comment, $thread) {
 
     if (parent) {
         var $parentComment = this.$el.find("div.comment[data-id='" + parent + "']"),
-            $thread = $parentComment.find('div.comment-thread');
+            $newThread = $parentComment.find('div.comment-thread');
 
-        console.log("parent", parent, $parentComment, $parentComment.length);
+        if ($newThread.length === 0) {
+            $newThread = $('<div class="comment-thread">');
+            $parentComment.append($newThread);
+        }
+
+        $newThread.append($comment);
+    }
+    else {
+        var $mainThread = this.$el.find('> div.comment-thread');
+        if ($mainThread.length === 0) {
+            $mainThread = $(threadTemplate());
+            this.$el.empty().append($mainThread);
+        }
+        $mainThread.append($comment);
     }
 
-    $thread.append($comment);
     $comment.find('a.add-comment').on('click', _.bind(this.onClickShowCommentForm, this));
 };
 
@@ -17473,15 +17484,10 @@ Kaiju.prototype.onSubmitCommentForm = function(evt) {
 
     var form = this.commentForm[0];
 
-    console.log({
-        user: form.user.value,
-        email: form.email.value,
-        body: form.body.value,
-        parent: form.parent.value
-    });
+    this.commentForm.addClass('hidden').detach();
 
     this.postComment({
-        user: form.user.value,
+        fullname: form.user.value,
         email: form.email.value,
         body: form.body.value,
         parent: form.parent.value
@@ -17509,6 +17515,7 @@ Kaiju.prototype.onClickShowCommentForm = function(evt) {
 
 Kaiju.prototype.showCommentForm = function() {
     this.commentForm.removeClass('hidden');
+    this.commentForm.find('input, textarea').val('');
 };
 
 Kaiju.prototype.hideCommentForm = function() {
@@ -17519,7 +17526,7 @@ $(function() {
     var kaiju = new Kaiju({
         url: "http://10.4.126.233:2714",
         forum: "5346e494331583002c7de60e",
-        page: "local_test_page",
+        page: "local_test_page_a",
         selector: "section.comments-section"
     });
 

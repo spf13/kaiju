@@ -5,14 +5,22 @@
   <style>
     .comment-thread {
       border-left: 6px #ccc solid;
+      margin-top: 1.0em;
       padding-left: 1.5em;
     }
     .comment {
       padding-top: 0.8em;
-      padding-bottom: 1.6em;
+      padding-bottom: 0.8em;
       border-left: 0px;
       border-bottom: 1px solid #eee;
     }
+    .comment-header {
+      padding-bottom: 0.8em;
+    }
+    .comment-actions {
+      margin: 0.8em 0px;
+    }
+
   </style>
 </head>
 
@@ -27,21 +35,28 @@
     </section>
     <a class="add-comment" style="cursor:pointer;">Add a comment</a>
     <form class="hidden form comment-form" action="">
-      <input type="hidden" name="parent" value="">
-      <div class="form-group">
-        <label for="user">User name</label>
-        <input type="text" name="user" class="form-control">
-      </div>
-      <div class="form-group">
-        <label for="email">Email address</label>
-        <input type="text" name="email" class="form-control">
-      </div>
-      <div class="form-group">
-        <label for="body">Comment body</label>
-        <textarea name="body" class="form-control"></textarea>
-      </div>
-      <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Send comment</button>
+      <div class="row">
+        <div class="col-sm-6">
+          <div class="well">
+            <h4>Post a comment</h4>
+            <input type="hidden" name="parent" value="">
+            <div class="form-group">
+              <label for="user">User name</label>
+              <input type="text" name="user" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="email">Email address</label>
+              <input type="text" name="email" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="body">Comment body</label>
+              <textarea name="body" class="form-control"></textarea>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">Post comment</button>
+            </div>
+          </div>
+        </div>
       </div>
     </form>
   </div>
