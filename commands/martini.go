@@ -41,6 +41,7 @@ func martiniInit() {
 	r.Post("/comment", PostCommentResource)
 	r.Get("redirect_url", RedirectUrl)
 
+	m.Use(martini.Static("ui"))
 	m.Action(r.Handle)
 
 	fmt.Println("Running on port " + viper.GetString("port"))
