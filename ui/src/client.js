@@ -11,7 +11,16 @@ var Kaiju = function(options) {
 
     var socket = this.socket = io.connect(KAIJU_URL);
 
-    this.socket.on('commentsFor', this.handleCommentsFor);
+    this.socket.on('commentsFor', _.bind(this.handleCommentsFor, this));
+
+    this._comments = { };
+
+    this.commentTemplate = _.template(
+        '<div class="comment" data-thread-id="<%= parentId %>">' +
+        '<strong><%= user.name %></strong> (<%= user.email %>): <%= body %>' +
+        '</div>")');
+
+    this.threadTemplate = _.template('<div class="commentThread"></div>');
 };
 
 Kaiju.prototype.postComment = function(message) {
@@ -24,24 +33,39 @@ Kaiju.prototype.postComment = function(message) {
 
 Kaiju.prototype.getComments = function() {
     console.log('getComments', this.forum, this.page);
-    this.socket.emit('getComments', {
+    this.socket.emit('getComments', JSON.stringify({
         forum: this.forum,
         page: this.page
-    });
+    }));
 };
 
 Kaiju.prototype.handleCommentsFor = function(data) {
-    console.log("handle comments", data);
-    if (_.isArray(data.comments)) {
-        $commentSection = $('section.comments-section');
+    var commentTemplate = this.commentTemplate,
+        threadTemplate = this.threadTemplate;
+
+    data = JSON.parse(data);
+
+    if (_.isArray(data)) {
+
+        var $commentSection = $('section.comments-section');
 
         $commentSection.empty();
 
-        _.each(data.comments, function(comment) {
+        var $mainThread = $('<div class="comment-thread">');
+
+        _.each(data, function(comment) {
             console.log(comment);
-            $commentSection.append('<div class="well"><strong>' +
-                comment.user + "</strong> (" + comment.email + "): " + comment.body + "</div>");
+            $mainThread.append($(commentTemplate({
+                user: {
+                    name: comment.User.FullName,
+                    email: comment.User.Email
+                },
+                body: comment.Body,
+                parentId: comment.ParentID
+            })));
         });
+
+        $commentSection.append($mainThread);
     }
 };
 
