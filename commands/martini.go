@@ -43,7 +43,7 @@ func martiniInit() {
 	// 	Scopes:		  []string{"user:email"},
 	//}))
 
-	r.Get("/", index)
+	//r.Get("/", index)
 	r.Get("/comments/:forum/:page", GetAllCommentsResource)
 	r.Post("/comment", PostCommentHandler)
 	//r.Get("/github_redirect", RedirectUrl)
