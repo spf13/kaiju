@@ -21,3 +21,7 @@ _testmain.go
 
 *.exe
 *~
+
+# UI
+ui/node_modules
+ui/build
