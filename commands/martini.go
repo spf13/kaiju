@@ -52,6 +52,7 @@ func martiniInit() {
 	// 	return fmt.Sprintf("%+v", request)
 	//})
 
+	m.Use(martini.Static("ui"))
 	m.Action(r.Handle)
 
 	fmt.Println("Running on port " + viper.GetString("port"))

@@ -9,7 +9,7 @@
     }
     .comment {
       padding-top: 0.8em;
-      padding-bottom: 0.8em;
+      padding-bottom: 1.6em;
       border-left: 0px;
       border-bottom: 1px solid #eee;
     }
@@ -25,27 +25,25 @@
     Comment section follows:
     <section class="comments-section">
     </section>
-    <div class="row">
-      <div class="col-sm-6">
-        <form class="form comment-form" action="">
-          <div class="form-group">
-            <label for="user">User name</label>
-            <input type="text" name="user" class="form-control">
-          </div>
-          <div class="form-group">
-            <label for="email">Email address</label>
-            <input type="text" name="email" class="form-control">
-          </div>
-          <div class="form-group">
-            <label for="body">Comment body</label>
-            <textarea name="body" class="form-control"></textarea>
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Send comment</button>
-          </div>
-        </form>
+    <a class="add-comment" style="cursor:pointer;">Add a comment</a>
+    <form class="hidden form comment-form" action="">
+      <input type="hidden" name="parent" value="">
+      <div class="form-group">
+        <label for="user">User name</label>
+        <input type="text" name="user" class="form-control">
       </div>
-    </div>
+      <div class="form-group">
+        <label for="email">Email address</label>
+        <input type="text" name="email" class="form-control">
+      </div>
+      <div class="form-group">
+        <label for="body">Comment body</label>
+        <textarea name="body" class="form-control"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Send comment</button>
+      </div>
+    </form>
   </div>
 </body>
 <script type="text/javascript" src="build/kaiju-client.js"></script>

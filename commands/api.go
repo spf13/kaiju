@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+
 	"github.com/spf13/kaiju/models"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
@@ -96,7 +97,7 @@ func PostComment(db *mgo.Database, fullname string, email string, forumId bson.O
 func _getAllCommentsWithQuery(db *mgo.Database, query bson.M) ([]*models.Comment, error) {
 	ret := make([]*models.Comment, 0, 0)
 	comments := db.C("comments")
-	if err := comments.Find(query).All(&ret); err != nil {
+	if err := comments.Find(query).Sort("_id").All(&ret); err != nil {
 		return nil, err
 	}
 

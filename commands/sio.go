@@ -108,18 +108,18 @@ func onGetComments(ns *socketio.NameSpace, message string) {
 	//forumStr := jsonMap["forum"]
 	forumStr := "5346e494331583002c7de60e"
 	if bson.IsObjectIdHex(forumStr) == false {
-		jww.ERROR.Printf("`forum` is not valid. Received: `%v`", forumStr)
+		jww.ERROR.Printf("`forum` is not valid. Received: `%v`\n", forumStr)
 	}
 	forum := bson.ObjectIdHex(forumStr)
 
 	comments, err := GetAllComments(db, forum, jsonMap["page"])
 	if err != nil {
-		jww.ERROR.Printf("Error: %v", err)
+		jww.ERROR.Printf("Error: %v\n", err)
 	}
 
 	bComments, err := json.Marshal(comments)
 	if err != nil {
-		jww.ERROR.Printf("Error: %v", err)
+		jww.ERROR.Printf("Error: %v\n", err)
 	}
 
 	fmt.Println(string(bComments))
@@ -136,7 +136,7 @@ func onPostComment(ns *socketio.NameSpace, message string) {
 	var jsonMap map[string]string
 	err := json.Unmarshal([]byte(message), &jsonMap)
 
-	fmt.Printf("%#v", jsonMap)
+	fmt.Printf("%#v\n", jsonMap)
 
 	if err != nil {
 		jww.ERROR.Println(err.Error())
@@ -149,7 +149,7 @@ func onPostComment(ns *socketio.NameSpace, message string) {
 		//jsonMap["forum"],
 		jsonMap["page"],
 		jsonMap["body"],
-		"")
+		jsonMap["parent"])
 
 	comment, err := PostComment(db,
 		userId,
@@ -169,9 +169,9 @@ func onPostComment(ns *socketio.NameSpace, message string) {
 	bComment, err := json.Marshal(comment)
 
 	if err != nil {
-		jww.ERROR.Printf("Error: %v", err)
+		jww.ERROR.Printf("Error: %v\n", err)
 	}
 
 	sio.Broadcast("commentPosted", string(bComment))
-	fmt.Printf("%#v", string(bComment))
+	fmt.Printf("%#v\n", string(bComment))
 }
