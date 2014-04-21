@@ -1,7 +1,7 @@
 <html>
 <head>
   <title>Kaiju demo page</title>
-  <link href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
+  <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
   <style>
     .comment-thread {
       border-left: 6px #ccc solid;
@@ -62,4 +62,16 @@
   </div>
 </body>
 <script type="text/javascript" src="build/kaiju-client.js"></script>
+<script type="text/javascript">
+$(function() {
+    var kaiju = new Kaiju({
+        url: "http://10.4.126.233:2714",
+        forum: "5346e494331583002c7de60e",
+        page: "local_test_page_ab",
+        selector: "section.comments-section"
+    });
+
+    kaiju.connect();
+});
+</script>
 </html>

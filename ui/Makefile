@@ -5,5 +5,8 @@ BUILD=build
 SRC=src/*
 TARGET=kaiju-client.js
 
-build_client:
+build_client: npm
 	$(NODE) $(BROWSERIFY) -o $(BUILD)/$(TARGET) $(SRC)
+
+npm:
+	$(NPM) install

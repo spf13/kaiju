@@ -147,14 +147,3 @@ Kaiju.prototype.showCommentForm = function() {
 Kaiju.prototype.hideCommentForm = function() {
     this.commentForm.addClass('hidden');
 };
-
-$(function() {
-    var kaiju = new Kaiju({
-        url: "http://10.4.126.233:2714",
-        forum: "5346e494331583002c7de60e",
-        page: "local_test_page_ab",
-        selector: "section.comments-section"
-    });
-
-    kaiju.connect();
-});
