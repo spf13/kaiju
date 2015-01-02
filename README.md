@@ -57,3 +57,8 @@ make
 ```
 
 This will drop the build into ```ui/build/kaiju-client.js```.
+
+## Server
+
+for now, storage of data is done using a MongoDB server, so you should install one.
+It should be possibble to support different storage mechanism via some code enhancements. (PR's welcome!)
