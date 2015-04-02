@@ -9,7 +9,6 @@
     "socket.io-client": "latest",
     "express": "latest",
     "underscore": "latest",
-    "handlebars": "latest",
     "mongodb": "*"
   },
   "devDependencies": {
