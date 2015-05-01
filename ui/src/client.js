@@ -1,7 +1,6 @@
 var $ = require('jquery'),
     _ = require('underscore'),
-    io = require('socket.io-client'),
-    Handlebars = require('handlebars');
+    io = require('socket.io-client');
 
 var Kaiju = function(options) {
     this.forum = options.forum;
